@@ -33,20 +33,9 @@ sgi-2.0/
 └── .gitignore
 ```
 
-## Cómo Clonar el Repositorio
-```bash
-git clone https://github.com/[TU-USUARIO]/sgi-2.0.git
-cd sgi-2.0
-```
-
 ## Branches del Proyecto
 - **main** - Rama principal (producción)
 - **lautaro-zunino** - Desarrollo de procesamiento de cadenas
 - **felipe-larranaga** - Desarrollo de validaciones y ordenamiento
 - **felix-cabanchik** - Desarrollo de login y configuración
 - **agustin-poggi** - Desarrollo de reportes estadísticos
-
-## Cómo Ejecutar
-```bash
-python src/main.py
-```
