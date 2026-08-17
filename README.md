@@ -19,20 +19,6 @@ Sistema informático desarrollado en Python para centralizar la gestión operati
 - Funciones Lambda: map, filter, reduce
 - Gestión completa con Git
 
-## Estructura del Proyecto
-```
-sgi-2.0/
-├── src/
-│   ├── main.py           # Punto de entrada del sistema
-│   ├── login.py          # Módulo de control de acceso
-│   ├── productos.py      # ABM de Productos
-│   ├── categorias.py     # ABM de Categorías
-│   ├── inventario.py     # ABM de Inventario
-│   └── reportes.py       # Módulo de reportes estadísticos
-├── README.md
-└── .gitignore
-```
-
 ## Branches del Proyecto
 - **main** - Rama principal (producción)
 - **lautaro-zunino** - Desarrollo de procesamiento de cadenas
