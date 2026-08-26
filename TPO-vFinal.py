@@ -1,3 +1,5 @@
+from functools import reduce
+
 # FUNCIONES DE VALIDACIÓN
 # Usamos try-except para atajar el error si el usuario ingresa un string en vez de un número.
 def es_entero(var_str):
@@ -303,12 +305,27 @@ def modificar_producto(codigos, nombres, precios):
         print("Producto actualizado.")
 
 def listar_productos(codigos, nombres, precios):
+    # Muestra el listado de productos. El armado del texto 
+    # ahora lo hace generar_reporte_productos(), que usa reduce
+    # para combinar todas las líneas en un único string antes de imprimirlas.
+    print(generar_reporte_productos(codigos, nombres, precios))
+
+# FUNCION DE AGREGACIÓN CON REDUCE (Lautaro Zanino)
+def generar_reporte_productos(codigos, nombres, precios):
     if len(codigos) == 0:
-        print("\nNo hay productos cargados.")
-    else:
-        print("\n--- LISTA DE PRODUCTOS ---")
-        for i in range(len(codigos)):
-            print("Cód:", codigos[i], "| Nombre:", nombres[i], "| Precio: $", precios[i])
+        return "No hay productos cargados."
+
+    lineas = []
+    for i in range(len(codigos)):
+        linea = "Cód: " + str(codigos[i]) + " | Nombre: " + nombres[i] + " | Precio: $" + str(precios[i])
+        lineas.append(linea)
+
+    # 'reduce' junta todas las líneas en un unico string.
+    # Todo eso se guarda en la variable reporte la cual luego se usa para mostrar la informacion
+    reporte = reduce(lambda acumulado, linea: acumulado + "\n" + linea, lineas)
+    return "\n--- LISTA DE PRODUCTOS ---\n" + reporte
+    
+
 
 # CATEGORÍAS
 def alta_categoria(codigos, nombres, recargos, estados):
@@ -359,13 +376,27 @@ def modificar_categoria(codigos, nombres, recargos, estados):
         print("Categoría actualizada.")
 
 def listar_categorias(codigos, nombres, recargos, estados):
+    # Muestra el listado de categorías. El que se encarga de armar el texto es la nueva funcion 
+    # generar_reporte_categoria(), la cual usa 'reduce' para
+    # combinar todas las líneas en un único string antes de imprimirlas
+    print(generar_reporte_categoria(codigos, nombres, recargos, estados))
+
+# OPERACIÓN DE AGREGACIÓN CON REDUCE (Lautaro Zanino)
+def generar_reporte_categoria(codigos, nombres, recargos, estados):
     if len(codigos) == 0:
-        print("\nNo hay categorías cargadas.")
-    else:
-        print("\n--- LISTA DE CATEGORÍAS ---")
-        for i in range(len(codigos)):
-            estado_texto = "Activa" if estados[i] == 1 else "Inactiva"
-            print("Cód:", codigos[i], "| Nombre:", nombres[i], "| Recargo:", recargos[i], "% | Estado:", estado_texto)
+        return "No hay categorias cargadas."
+
+    lineas = []
+    for i in range(len(codigos)):
+        # traduce el estado numérico (1/0) a texto legible antes de armar la línea
+        estado_texto = "Activa" if estados[i] == 1 else "Inactiva"
+        linea = "Código: " + str(codigos[i]) + " | Nombre: " + nombres[i] + " | Recargo: " + str(recargos[i]) + "% | Estado: " + estado_texto
+        lineas.append(linea)
+
+    # 'reduce' combina todas las líneas en un unico string 
+    # para luego mostrar el contenido a traves del return 
+    reporte = reduce(lambda acumulado, linea: acumulado + "\n" + linea, lineas)
+    return "\n--- LISTA DE CATEGORIAS ---\n" + reporte
 
 # INVENTARIO
 def alta_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, prod_codigos, cat_codigos):
@@ -429,12 +460,25 @@ def modificar_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, pro
         print("Registro de inventario actualizado.")
 
 def listar_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps):
+    # Muestra el listado de inventario. El armado del texto (incluido el caso de
+    # lista vacía) lo hace generar_reporte_inventario(), que usa reduce el cual
+    # combina todas las líneas en un único string antes de imprimirlas.
+    print(generar_reporte_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps))
+
+# OPERACIÓN DE AGREGACIÓN CON REDUCE (Lautaro Zanino)
+def generar_reporte_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps):
     if len(inv_cods) == 0:
-        print("\nNo hay registros en el inventario.")
-    else:
-        print("\n--- LISTA DE INVENTARIO ---")
-        for i in range(len(inv_cods)):
-            print("Cód Inv:", inv_cods[i], "| Prod:", inv_prods[i], "| Cat:", inv_cats[i], "| Cant:", inv_cants[i], "| Depósito:", inv_deps[i])
+        return "No hay registros en el inventario."
+
+    lineas = []
+    for i in range(len(inv_cods)):
+        linea = "Codigo: " + str(inv_cods[i]) + " | Producto: " + str(inv_prods[i]) + " | Categoria: " + str(inv_cats[i]) + " | Cantidad: " + str(inv_cants[i]) + " | Deposito: " + str(inv_deps[i])
+        lineas.append(linea)
+
+    # 'reduce' junta todas las líneas en un unico string, separadas por salto de línea
+    reporte = reduce(lambda acumulado, linea: acumulado + "\n" + linea, lineas)
+    return "\n--- LISTA DE INVENTARIO ---\n" + reporte
+
 
 # CONSULTAS
 def consulta_productos_en_stock(columnas_prod, columnas_inv):
