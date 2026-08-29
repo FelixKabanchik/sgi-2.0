@@ -1,3 +1,4 @@
+# Mensaje de prueba de commit desde branch felipe-larranaga
 # FUNCIONES DE VALIDACIÓN
 # Usamos try-except para atajar el error si el usuario ingresa un string en vez de un número.
 def es_entero(var_str):
