@@ -1,3 +1,5 @@
+import re
+
 from functools import reduce
 
 # FUNCIONES DE VALIDACIÓN
