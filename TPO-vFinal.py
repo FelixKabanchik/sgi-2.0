@@ -1,3 +1,5 @@
+import re
+
 # FUNCIONES DE VALIDACIÓN
 # Usamos try-except para atajar el error si el usuario ingresa un string en vez de un número.
 def es_entero(var_str):
@@ -39,114 +41,74 @@ def pedir_float(mensaje):
         dato = input(mensaje)
     return float(dato)
 
+# Validación de nombres con expresión regulares.
+# Patrón: solo letras (incluye tildes y ñ) y espacios.
+PATRON_NOMBRE = r"^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ ]+$"
+
+def es_nombre_valido(texto):
+    texto = texto.strip()
+    if not (3 <= len(texto) <= 40):
+        return False
+    return re.match(PATRON_NOMBRE, texto) is not None
+
 def pedir_texto(mensaje):
-    # Valida que el texto no esté vacío y no sea un número (puede contener números pero DEBE tener texto).
+    # Valida que el texto no esté vacío y no tenga números ni símbolos.
     dato = input(mensaje)
-    # Falla si está vacío o si el usuario ingresó solo números
-    while dato.strip() == "" or es_entero(dato) or es_float(dato):
-        print("Error: Debe ingresar un texto válido (no numérico y no vacío).")
+    while not es_nombre_valido(dato):
+        print("Error: Debe ingresar un texto válido (solo letras y espacios, entre 3 y 40 caracteres, sin números ni símbolos).")
         dato = input(mensaje)
     return dato.strip()
 
-# ORDENAMIENTOS
+# Validación de códigos con expresión regulares.
+# Cada entidad del sistema tiene un código con formato alfanumérico fijo:
+# Productos: PRD-NNN
+# Categorías: CAT-NN
+# Inventario: INV-NNNN
+# El patrón se arma dinámicamente en base al prefijo y la cantidad de dígitos esperada, y luego se valida con re.match()
+def es_codigo_valido(dato, prefijo, cant_digitos):
+    patron = r"^" + prefijo + r"-\d{" + str(cant_digitos) + r"}$"
+    return re.match(patron, dato) is not None
 
-# Ordenamiento por burbuja para los productos (criterio elegido: precio)
-# Empuja el valor más alto al final de la lista intercambiando elementos vecinos.
-def ordenar_productos_burbuja(codigos, nombres, precios):
-    n = len(precios)
-    # El bucle externo controla cuántas pasadas hacemos sobre la lista
-    for i in range(n - 1):
-        # El bucle interno compara los elementos vecinos y los intercambia si están en el orden incorrecto
-        for j in range(0, n - i - 1):
-            # Condición: si el precio actual es MAYOR al que le sigue, los intercambiamos
-            if precios[j] > precios[j + 1]:
-                # 1. Intercambio en la lista de PRECIOS
-                aux_precio = precios[j]
-                precios[j] = precios[j + 1]
-                precios[j + 1] = aux_precio
-                # 2. Intercambio en la lista de NOMBRES
-                aux_nombre = nombres[j]
-                nombres[j] = nombres[j + 1]
-                nombres[j + 1] = aux_nombre
-                # 3. Intercambio en la lista de CÓDIGOS
-                aux_codigo = codigos[j]
-                codigos[j] = codigos[j + 1]
-                codigos[j + 1] = aux_codigo
+def pedir_codigo(mensaje, prefijo, cant_digitos):
+# .strip() usado para descartar espacios de más.
+    dato = input(mensaje).strip()
+    while not es_codigo_valido(dato, prefijo, cant_digitos):
+        ejemplo = prefijo + "-" + ("0" * (cant_digitos - 1)) + "1"
+        print(f"Error: El código debe tener el formato {prefijo}-{'N' * cant_digitos} (ej: {ejemplo}).")
+        dato = input(mensaje).strip()
+    return dato
 
-# Ordenamiento por selección para las categorías (criterio: código)
-# Busca el código mínimo en el resto de la lista y lo ubica al principio.
-def ordenar_categorias_seleccion(codigos, nombres, recargos, estados):
-    n = len(codigos)
-    # El bucle externo recorre cada posición donde se debe colocar el mínimo
-    for i in range(n - 1):
-        # Se asume que el elemento actual es el mínimo
-        indice_minimo = i
-        # El bucle interno busca el código mínimo en el resto de la lista
-        for j in range(i + 1, n):
-            # Condición: si encontramos un código menor al mínimo actual, actualizamos su índice
-            if codigos[j] < codigos[indice_minimo]:
-                indice_minimo = j 
-        
-        # Si el mínimo encontrado es diferente al de la posición actual, realizamos los intercambios
-        if indice_minimo != i:
-            # 1. Intercambio en la lista de CÓDIGOS
-            aux_codigo = codigos[i]
-            codigos[i] = codigos[indice_minimo]
-            codigos[indice_minimo] = aux_codigo
-            
-            # 2. Intercambio en la lista de NOMBRES
-            aux_nombre = nombres[i]
-            nombres[i] = nombres[indice_minimo]
-            nombres[indice_minimo] = aux_nombre
-            
-            # 3. Intercambio en la lista de RECARGOS
-            aux_recargo = recargos[i]
-            recargos[i] = recargos[indice_minimo]
-            recargos[indice_minimo] = aux_recargo
-            
-            # 4. Intercambio en la lista de ESTADOS
-            aux_estado = estados[i]
-            estados[i] = estados[indice_minimo]
-            estados[indice_minimo] = aux_estado
+# ORDENAMIENTOS (Readaptación)
+"""
+Originalmente había tres ordenamientos distintos (burbuja, selección e inserción), uno para cada entidad.
+Ahora se realiza la adaptación a una sola función que ordena cualquier conjunto de listas paralelas según
+el campo que se le indique. 
+"""
 
-# Ordenamiento por inserción para el inventario (criterio: cantidad)
-# Toma la cantidad de unidades y la inserta en la posición correcta desplazando los elementos mayores hacia la derecha.
-def ordenar_inventario_insercion(codigos, cod_prod, cod_cat, cantidades, depositos):
-    n = len(cantidades)
-    # El bucle externo itera desde el segundo elemento hasta el final
-    for i in range(1, n):
-        # Se guardan los valores del elemento a insertar de todas las listas paralelas
-        llave_cantidad = cantidades[i]
-        llave_codigo = codigos[i]
-        llave_prod = cod_prod[i]
-        llave_cat = cod_cat[i]
-        llave_deposito = depositos[i]
-        
-        # Comenzamos a comparar desde el elemento anterior
-        j = i - 1
-        
-        # Mientras haya elementos a la izquierda con cantidad mayor, desplazamos hacia la derecha
-        while j >= 0 and cantidades[j] > llave_cantidad:
-            # 1. Desplazamiento en la lista de CANTIDADES
-            cantidades[j + 1] = cantidades[j]
-            # 2. Desplazamiento en la lista de CÓDIGOS
-            codigos[j + 1] = codigos[j]
-            # 3. Desplazamiento en la lista de CÓDIGOS DE PRODUCTO
-            cod_prod[j + 1] = cod_prod[j]
-            # 4. Desplazamiento en la lista de CÓDIGOS DE CATEGORÍA
-            cod_cat[j + 1] = cod_cat[j]
-            # 5. Desplazamiento en la lista de DEPÓSITOS
-            depositos[j + 1] = depositos[j]
-            j -= 1
-        
-        # Una vez encontrada la posición correcta, insertamos el elemento
-        cantidades[j + 1] = llave_cantidad
-        codigos[j + 1] = llave_codigo
-        cod_prod[j + 1] = llave_prod
-        cod_cat[j + 1] = llave_cat
-        depositos[j + 1] = llave_deposito
+def ordenar_listas_paralelas(listas, indice_clave):
+    """
+    Ordena un conjunto de listas paralelas en base a los valores de una de ellas.
+    Parámetro listas: lista que contiene las listas paralelas a ordenar.
+    Parámetro indice_clave: posición, dentro de 'listas', de la lista que se usa como criterio de orden.
+    """
+    n = len(listas[indice_clave])
+    # 1. Armamos una lista de índices (0, 1, 2, ..., n-1), uno por cada fila
+    indices = list(range(n))
+    # 2. Ordenamos esos índices usando sort() con una lambda que consulta, para cada índice, el valor de la columna elegida
+    indices.sort(key=lambda i: listas[indice_clave][i])
+    # 3. Reconstruimos cada lista paralela en el nuevo orden, usando comprensión
+    #    de listas dentro de un for común por cada columna
+    listas_ordenadas = []
+    for columna in listas:
+        nueva_columna = [columna[i] for i in indices]
+        listas_ordenadas.append(nueva_columna)
+    # 4. Volcamos el resultado ordenado de nuevo en cada una de las listas originales
+    for j in range(len(listas)):
+        for k in range(n):
+            listas[j][k] = listas_ordenadas[j][k]
 
 # Búsqueda binaria: Divide el espacio de búsqueda por la mitad en cada iteración, requiere que la lista esté ordenada previamente.
+# Readaptada para trabajar con Strings en lugar de enteros.
 def busqueda_binaria(lista_codigos, codigo_buscado):
     # Inicializamos los límites de búsqueda (izquierdo y derecho)
     izquierda = 0
@@ -181,8 +143,8 @@ def buscar_indice(lista_codigos, codigo_buscado):
     return -1 
 
 def buscar_producto_secuencial(codigos, nombres, precios):
-    # Solicitamos el código del producto a buscar (validado como entero positivo)
-    codigo = pedir_entero("\nIngrese el código del producto: ")
+    # Solicitamos el código del producto a buscar (validado con regex, formato PRD-NNN)
+    codigo = pedir_codigo("\nIngrese el código del producto (formato PRD-000): ", "PRD", 3)
     # Realizamos la búsqueda secuencial en la lista de códigos
     indice = buscar_indice(codigos, codigo)
 
@@ -196,19 +158,28 @@ def buscar_producto_secuencial(codigos, nombres, precios):
         print("Precio:", precios[indice])
 
 def buscar_producto_binaria(codigos, nombres, precios):
-    # Solicitamos el código del producto a buscar (validado como entero positivo)
-    codigo = pedir_entero("\nIngrese el código del producto: ")
-    # Realizamos la búsqueda binaria en la lista de códigos (requiere que esté ordenada)
-    indice = busqueda_binaria(codigos, codigo)
+    # Solicitamos el código del producto a buscar (validado con regex, formato PRD-NNN)
+    codigo = pedir_codigo("\nIngrese el código del producto (formato PRD-000): ", "PRD", 3)
+    """
+    READAPTACIÓN: la búsqueda binaria requiere que la lista esté ordenada por código.
+    Para no alterar ese orden ni el de las listas originales, se arma una copia de cada lista y se ordena esa copia por código,
+    reutilizando la misma función genérica de ordenamiento.
+    """
+    codigos_por_codigo = codigos.copy()
+    nombres_por_codigo = nombres.copy()
+    precios_por_codigo = precios.copy()
+    ordenar_listas_paralelas([codigos_por_codigo, nombres_por_codigo, precios_por_codigo], 0)
+
+    indice = busqueda_binaria(codigos_por_codigo, codigo)
 
     # Si no se encuentra (índice = -1), mostramos mensaje de error
     if indice == -1:
         print("Producto no encontrado.")
     # Si se encuentra, mostramos todos los datos del producto
     else:
-        print("Código:", codigos[indice])
-        print("Nombre:", nombres[indice])
-        print("Precio:", precios[indice])
+        print("Código:", codigos_por_codigo[indice])
+        print("Nombre:", nombres_por_codigo[indice])
+        print("Precio:", precios_por_codigo[indice])
 
 
 # FUNCIONES BASE Y LOGIN
@@ -236,19 +207,21 @@ def iniciar_sesion():
  
     return logged_in
 
-# 	DATOS HARDCODEADOS (LISTAS PARALELAS)
-prod_codigos = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
+#  DATOS HARDCODEADOS (LISTAS PARALELAS)
+# Los códigos ahora tienen formato alfanumérico validable por RE:
+# PRD-NNN (productos), CAT-NN (categorías), INV-NNNN (inventario).
+prod_codigos = ["PRD-101", "PRD-102", "PRD-103", "PRD-104", "PRD-105", "PRD-106", "PRD-107", "PRD-108", "PRD-109", "PRD-110"]
 prod_nombres = ["Cuaderno", "Lapicera", "Goma", "Carpeta", "Marcador", "Tijera", "Regla", "Corrector", "Mochila", "Cartuchera"]
 prod_precios = [1500.0, 200.0, 150.0, 2500.0, 800.0, 1200.0, 300.0, 600.0, 15000.0, 3500.0]
 
-cat_codigos = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-cat_nombres = ["Papelería", "Escritura", "Escolares", "Oficina", "Arte", "Mochilas", "Tecnología", "Libros", "Regalos", "Varios"]
+cat_codigos = ["CAT-01", "CAT-02", "CAT-03", "CAT-04", "CAT-05", "CAT-06", "CAT-07", "CAT-08", "CAT-09", "CAT-10"]
+cat_nombres = ["Papeleria", "Escritura", "Escolares", "Oficina", "Arte", "Mochilas", "Tecnologia", "Libros", "Regalos", "Varios"]
 cat_recargos = [15.0, 10.0, 20.0, 25.0, 30.0, 35.0, 40.0, 5.0, 50.0, 10.0]
 cat_estados = [1, 1, 1, 0, 1, 1, 0, 1, 1, 1]
 
-inv_codigos = [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
-inv_codigos_prod = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
-inv_codigos_cat = [1, 2, 3, 1, 5, 3, 3, 3, 6, 3]
+inv_codigos = ["INV-1001", "INV-1002", "INV-1003", "INV-1004", "INV-1005", "INV-1006", "INV-1007", "INV-1008", "INV-1009", "INV-1010"]
+inv_codigos_prod = ["PRD-101", "PRD-102", "PRD-103", "PRD-104", "PRD-105", "PRD-106", "PRD-107", "PRD-108", "PRD-109", "PRD-110"]
+inv_codigos_cat = ["CAT-01", "CAT-02", "CAT-03", "CAT-01", "CAT-05", "CAT-03", "CAT-03", "CAT-03", "CAT-06", "CAT-03"]
 inv_cantidades = [50, 200, 100, 30, 150, 80, 45, 120, 90, 15]
 inv_depositos = [1, 1, 2, 1, 3, 2, 1, 2, 1, 3]
 
@@ -260,7 +233,7 @@ columnas_inv = [inv_codigos, inv_codigos_prod, inv_codigos_cat, inv_cantidades, 
 # FUNCIONES CRUD 
 # PRODUCTOS
 def alta_producto(codigos, nombres, precios):
-    codigo = pedir_entero("\nIngrese el código del nuevo producto: ")
+    codigo = pedir_codigo("\nIngrese el código del nuevo producto (formato PRD-000): ", "PRD", 3)
     if buscar_indice(codigos, codigo) != -1:
         print("Error: Ya existe un producto con ese código.")
     else:
@@ -272,7 +245,7 @@ def alta_producto(codigos, nombres, precios):
         print("¡Producto agregado con éxito!")
 
 def baja_producto(codigos, nombres, precios, inv_prods):
-    codigo = pedir_entero("\nIngrese el código del producto a eliminar: ")
+    codigo = pedir_codigo("\nIngrese el código del producto a eliminar (formato PRD-000): ", "PRD", 3)
     
     # Verificación de integridad de datos
     # Si el producto existe en el inventario, no se puede eliminar hasta que no esté eliminado el registro de inventario que contiene ese producto
@@ -290,7 +263,7 @@ def baja_producto(codigos, nombres, precios, inv_prods):
         print("Producto '" + nombre_borrado + "' eliminado correctamente.")
 
 def modificar_producto(codigos, nombres, precios):
-    codigo = pedir_entero("\nIngrese el código del producto a modificar: ")
+    codigo = pedir_codigo("\nIngrese el código del producto a modificar (formato PRD-000): ", "PRD", 3)
     indice = buscar_indice(codigos, codigo)
     if indice == -1:
         print("Error: El producto no existe.")
@@ -312,7 +285,7 @@ def listar_productos(codigos, nombres, precios):
 
 # CATEGORÍAS
 def alta_categoria(codigos, nombres, recargos, estados):
-    codigo = pedir_entero("\nIngrese el código de la nueva categoría: ")
+    codigo = pedir_codigo("\nIngrese el código de la nueva categoría (formato CAT-00): ", "CAT", 2)
     if buscar_indice(codigos, codigo) != -1:
         print("Error: Ya existe una categoría con ese código.")
     else:
@@ -326,7 +299,7 @@ def alta_categoria(codigos, nombres, recargos, estados):
         print("¡Categoría agregada con éxito!")
 
 def baja_categoria(codigos, nombres, recargos, estados, inv_cats):
-    codigo = pedir_entero("\nIngrese el código de la categoría a eliminar: ")
+    codigo = pedir_codigo("\nIngrese el código de la categoría a eliminar (formato CAT-00): ", "CAT", 2)
     
     # Verificación de integridad de datos - Si la categoría existe en el inventario, no se puede eliminar hasta que no esté eliminado el registro de inventario que contiene esa categoría
     if buscar_indice(inv_cats, codigo) != -1:
@@ -344,7 +317,7 @@ def baja_categoria(codigos, nombres, recargos, estados, inv_cats):
         print("Categoría '" + nombre_borrado + "' eliminada correctamente.")
 
 def modificar_categoria(codigos, nombres, recargos, estados):
-    codigo = pedir_entero("\nIngrese el código de la categoría a modificar: ")
+    codigo = pedir_codigo("\nIngrese el código de la categoría a modificar (formato CAT-00): ", "CAT", 2)
     indice = buscar_indice(codigos, codigo)
     if indice == -1:
         print("Error: La categoría no existe.")
@@ -369,15 +342,15 @@ def listar_categorias(codigos, nombres, recargos, estados):
 
 # INVENTARIO
 def alta_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, prod_codigos, cat_codigos):
-    codigo = pedir_entero("\nIngrese el código del nuevo registro de inventario: ")
+    codigo = pedir_codigo("\nIngrese el código del nuevo registro de inventario (formato INV-0000): ", "INV", 4)
     if buscar_indice(inv_cods, codigo) != -1:
         print("Error: Ya existe un registro de inventario con ese código.")
     else:
-        cod_prod = pedir_entero("Ingrese el código del producto: ")
+        cod_prod = pedir_codigo("Ingrese el código del producto (formato PRD-000): ", "PRD", 3)
         if buscar_indice(prod_codigos, cod_prod) == -1:
             print("Error: El producto no existe en el sistema. Alta cancelada.")
             return
-        cod_cat = pedir_entero("Ingrese el código de la categoría: ")
+        cod_cat = pedir_codigo("Ingrese el código de la categoría (formato CAT-00): ", "CAT", 2)
         if buscar_indice(cat_codigos, cod_cat) == -1:
             print("Error: La categoría no existe en el sistema. Alta cancelada.")
             return
@@ -392,7 +365,7 @@ def alta_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, prod_cod
         print("¡Registro de inventario agregado con éxito!")
 
 def baja_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps):
-    codigo = pedir_entero("\nIngrese el código de inventario a eliminar: ")
+    codigo = pedir_codigo("\nIngrese el código de inventario a eliminar (formato INV-0000): ", "INV", 4)
     indice = buscar_indice(inv_cods, codigo)
     if indice == -1:
         print("Error: El registro no existe.")
@@ -405,17 +378,17 @@ def baja_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps):
         print("Registro de inventario eliminado correctamente.")
 
 def modificar_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, prod_codigos, cat_codigos):
-    codigo = pedir_entero("\nIngrese el código de inventario a modificar: ")
+    codigo = pedir_codigo("\nIngrese el código de inventario a modificar (formato INV-0000): ", "INV", 4)
     indice = buscar_indice(inv_cods, codigo)
     if indice == -1:
         print("Error: El registro no existe.")
     else:
         print("Registro actual -> Prod:", inv_prods[indice], "| Cat:", inv_cats[indice], "| Cant:", inv_cants[indice], "| Depósito:", inv_deps[indice])
-        nuevo_cod_prod = pedir_entero("Ingrese el nuevo código de producto: ")
+        nuevo_cod_prod = pedir_codigo("Ingrese el nuevo código de producto (formato PRD-000): ", "PRD", 3)
         if buscar_indice(prod_codigos, nuevo_cod_prod) == -1:
             print("Error: El producto no existe. Modificación cancelada.")
             return
-        nuevo_cod_cat = pedir_entero("Ingrese el nuevo código de categoría: ")
+        nuevo_cod_cat = pedir_codigo("Ingrese el nuevo código de categoría (formato CAT-00): ", "CAT", 2)
         if buscar_indice(cat_codigos, nuevo_cod_cat) == -1:
             print("Error: La categoría no existe. Modificación cancelada.")
             return
@@ -459,8 +432,8 @@ def consulta_productos_en_stock(columnas_prod, columnas_inv):
         print("Producto:", prod_nombres[p], "- Unidades en stock:", total)
 
 def consulta_por_categoria(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    # Solicitamos el código de categoría a consultar
-    cat_buscada = pedir_entero("\nIngrese el código de categoría a consultar: ")
+    # Solicitamos el código de categoría a consultar (validado con regex, formato CAT-NN)
+    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)
     # Flag para detectar si se encontraron registros
     encontrado = False
     print("\n--- STOCK DE LA CATEGORÍA", cat_buscada, "---")
@@ -491,8 +464,8 @@ def consulta_por_deposito(inv_cods, inv_deps, inv_prods, inv_cants):
         print("No hay stock registrado en este depósito.")
 
 def consulta_unidades_categoria_deposito(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    # Solicitamos el código de categoría a consultar
-    cat_buscada = pedir_entero("\nIngrese el código de categoría a consultar: ")
+    # Solicitamos el código de categoría a consultar (validado con regex, formato CAT-NN)
+    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)
     # Solicitamos el número de depósito a consultar (validado entre 1 y 2)
     dep_buscado = solicitar_opcion_menu("Ingrese el número de depósito a consultar (1 o 2): ", 1, 2)
     # Acumulador para sumar todas las unidades encontradas
@@ -563,7 +536,7 @@ if logged_in:
                 elif opcion_submenu_producto == 3:
                     modificar_producto(prod_codigos, prod_nombres, prod_precios)
                 elif opcion_submenu_producto == 4:
-                    ordenar_productos_burbuja(prod_codigos, prod_nombres, prod_precios)
+                    ordenar_listas_paralelas([prod_codigos, prod_nombres, prod_precios], 0)
                     listar_productos(prod_codigos, prod_nombres, prod_precios)
                 elif opcion_submenu_producto == 5:
                     buscar_producto_secuencial(prod_codigos, prod_nombres, prod_precios)
@@ -589,7 +562,7 @@ if logged_in:
                 elif opcion_submenu_categoria == 3:
                     modificar_categoria(cat_codigos, cat_nombres, cat_recargos, cat_estados)
                 elif opcion_submenu_categoria == 4:
-                    ordenar_categorias_seleccion(cat_codigos, cat_nombres, cat_recargos, cat_estados)
+                    ordenar_listas_paralelas([cat_codigos, cat_nombres, cat_recargos, cat_estados], 1)
                     listar_categorias(cat_codigos, cat_nombres, cat_recargos, cat_estados)
 
         elif opcion_menu == 3:
@@ -611,7 +584,7 @@ if logged_in:
                 elif opcion_submenu_inventario == 3:
                     modificar_inventario(inv_codigos, inv_codigos_prod, inv_codigos_cat, inv_cantidades, inv_depositos, prod_codigos, cat_codigos)
                 elif opcion_submenu_inventario == 4:
-                    ordenar_inventario_insercion(inv_codigos, inv_codigos_prod, inv_codigos_cat, inv_cantidades, inv_depositos)
+                    ordenar_listas_paralelas([inv_codigos, inv_codigos_prod, inv_codigos_cat, inv_cantidades, inv_depositos], 3)
                     listar_inventario(inv_codigos, inv_codigos_prod, inv_codigos_cat, inv_cantidades, inv_depositos)
 
         elif opcion_menu == 4:
