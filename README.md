@@ -6,8 +6,8 @@ Sistema informático desarrollado en Python para centralizar la gestión operati
 ## Integrantes del Equipo
 - **Lautaro Zanino** - Procesamiento avanzado de cadenas de caracteres y reduce
 - **Felipe Larrañaga** (Referente) - Validaciones con expresiones regulares y algoritmos de ordenamiento
-- **Felix Cabanchik**  - Configuración Git, control de ramas y módulo de login (Realizado. Aclaración: no continúa cursando la materia)
 - **Agustín Poggi** - Módulo de consultas estadísticas con funciones Lambda
+- **Felix Cabanchik**  - Configuración Git, control de ramas y módulo de login (Realizado. Aclaración: no continúa cursando la materia)
 
 ## Funcionalidades Principales
 - Control de acceso (Login)
