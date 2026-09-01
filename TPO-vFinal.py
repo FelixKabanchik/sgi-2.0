@@ -1,5 +1,5 @@
 import re
-
+from functools import reduce
 # FUNCIONES DE VALIDACIÓN
 # Usamos try-except para atajar el error si el usuario ingresa un string en vez de un número.
 def es_entero(var_str):
@@ -238,6 +238,12 @@ def alta_producto(codigos, nombres, precios):
         print("Error: Ya existe un producto con ese código.")
     else:
         nombre = pedir_texto("Ingrese el nombre del producto: ")
+        # Validación agregada por Lautaro Zanino: evita cargar un producto con un nombre ya existente
+        # (aunque difiera en mayúsculas/minúsculas o espacios) usando nombre_duplicado().
+        if nombre_duplicado(nombres, nombre):
+            print("Error: Ya existe un producto con un nombre igual o muy similar.")
+            return
+        
         precio = pedir_float("Ingrese el precio: $")
         codigos.append(codigo)
         nombres.append(nombre)
@@ -276,20 +282,37 @@ def modificar_producto(codigos, nombres, precios):
         print("Producto actualizado.")
 
 def listar_productos(codigos, nombres, precios):
+    # Muestra el listado de productos. El armado del texto 
+    # ahora lo hace generar_reporte_productos(), que usa reduce
+    # para combinar todas las líneas en un único string antes de imprimirlas.
+    print(generar_reporte_productos(codigos, nombres, precios))
+def generar_reporte_productos(codigos, nombres, precios):
     if len(codigos) == 0:
-        print("\nNo hay productos cargados.")
-    else:
-        print("\n--- LISTA DE PRODUCTOS ---")
-        for i in range(len(codigos)):
-            print("Cód:", codigos[i], "| Nombre:", nombres[i], "| Precio: $", precios[i])
+        return "No hay productos cargados."
+
+    lineas = []
+    for i in range(len(codigos)):
+        linea = "Cód: " + str(codigos[i]) + " | Nombre: " + nombres[i] + " | Precio: $" + str(precios[i])
+        lineas.append(linea)
+
+    # 'reduce' junta todas las líneas en un unico string.
+    # Todo eso se guarda en la variable reporte la cual luego se usa para mostrar la informacion
+    reporte = reduce(lambda acumulado, linea: acumulado + "\n" + linea, lineas)
+    return "\n--- LISTA DE PRODUCTOS ---\n" + reporte
 
 # CATEGORÍAS
 def alta_categoria(codigos, nombres, recargos, estados):
-    codigo = pedir_codigo("\nIngrese el código de la nueva categoría (formato CAT-00): ", "CAT", 2)
+    codigo = pedir_entero("\nIngrese el código de la nueva categoría: ")
     if buscar_indice(codigos, codigo) != -1:
         print("Error: Ya existe una categoría con ese código.")
     else:
         nombre = pedir_texto("Ingrese el nombre de la categoría: ")
+        # Validación agregada por Lautaro Zanino: evita cargar una categoría con un nombre ya existente
+        # usando la misma función nombre_duplicado()
+        if nombre_duplicado(nombres, nombre):
+            print("Error: Ya existe una categoría con un nombre igual o muy similar.")
+            return
+
         recargo = pedir_float("Ingrese el porcentaje de recargo (ej: 15.5): ")
         estado = solicitar_opcion_menu("Ingrese el estado (1 = activa / 0 = inactiva): ", 0, 1)
         codigos.append(codigo)
@@ -331,15 +354,29 @@ def modificar_categoria(codigos, nombres, recargos, estados):
         estados[indice] = nuevo_estado
         print("Categoría actualizada.")
 
-def listar_categorias(codigos, nombres, recargos, estados):
-    if len(codigos) == 0:
-        print("\nNo hay categorías cargadas.")
-    else:
-        print("\n--- LISTA DE CATEGORÍAS ---")
-        for i in range(len(codigos)):
-            estado_texto = "Activa" if estados[i] == 1 else "Inactiva"
-            print("Cód:", codigos[i], "| Nombre:", nombres[i], "| Recargo:", recargos[i], "% | Estado:", estado_texto)
 
+def listar_categorias(codigos, nombres, recargos, estados):
+    # Muestra el listado de categorías. El que se encarga de armar el texto es la nueva funcion 
+    # generar_reporte_categoria(), la cual usa 'reduce' para
+    # combinar todas las líneas en un único string antes de imprimirlas
+    print(generar_reporte_categoria(codigos, nombres, recargos, estados))
+
+# OPERACIÓN DE AGREGACIÓN CON REDUCE (Lautaro Zanino)
+def generar_reporte_categoria(codigos, nombres, recargos, estados):
+    if len(codigos) == 0:
+        return "No hay categorias cargadas."
+
+    lineas = []
+    for i in range(len(codigos)):
+        # traduce el estado numérico (1/0) a texto legible antes de armar la línea
+        estado_texto = "Activa" if estados[i] == 1 else "Inactiva"
+        linea = "Código: " + str(codigos[i]) + " | Nombre: " + nombres[i] + " | Recargo: " + str(recargos[i]) + "% | Estado: " + estado_texto
+        lineas.append(linea)
+
+    # 'reduce' combina todas las líneas en un unico string 
+    # para luego mostrar el contenido a traves del return 
+    reporte = reduce(lambda acumulado, linea: acumulado + "\n" + linea, lineas)
+    return "\n--- LISTA DE CATEGORIAS ---\n" + reporte
 # INVENTARIO
 def alta_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, prod_codigos, cat_codigos):
     codigo = pedir_codigo("\nIngrese el código del nuevo registro de inventario (formato INV-0000): ", "INV", 4)
@@ -402,13 +439,24 @@ def modificar_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, pro
         print("Registro de inventario actualizado.")
 
 def listar_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps):
-    if len(inv_cods) == 0:
-        print("\nNo hay registros en el inventario.")
-    else:
-        print("\n--- LISTA DE INVENTARIO ---")
-        for i in range(len(inv_cods)):
-            print("Cód Inv:", inv_cods[i], "| Prod:", inv_prods[i], "| Cat:", inv_cats[i], "| Cant:", inv_cants[i], "| Depósito:", inv_deps[i])
+    # Muestra el listado de inventario. El armado del texto (incluido el caso de
+    # lista vacía) lo hace generar_reporte_inventario(), que usa reduce el cual
+    # combina todas las líneas en un único string antes de imprimirlas.
+    print(generar_reporte_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps))
 
+# OPERACIÓN DE AGREGACIÓN CON REDUCE (Lautaro Zanino)
+def generar_reporte_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps):
+    if len(inv_cods) == 0:
+        return "No hay registros en el inventario."
+
+    lineas = []
+    for i in range(len(inv_cods)):
+        linea = "Codigo: " + str(inv_cods[i]) + " | Producto: " + str(inv_prods[i]) + " | Categoria: " + str(inv_cats[i]) + " | Cantidad: " + str(inv_cants[i]) + " | Deposito: " + str(inv_deps[i])
+        lineas.append(linea)
+
+    # 'reduce' junta todas las líneas en un unico string, separadas por salto de línea
+    reporte = reduce(lambda acumulado, linea: acumulado + "\n" + linea, lineas)
+    return "\n--- LISTA DE INVENTARIO ---\n" + reporte
 # CONSULTAS
 def consulta_productos_en_stock(columnas_prod, columnas_inv):
     # Extraemos las columnas relevantes de la matriz de productos
@@ -487,6 +535,89 @@ def consulta_unidades_categoria_deposito(inv_cods, inv_cats, inv_prods, inv_cant
     else:
         print("No hay stock registrado para esta categoría en ese depósito.")
 
+# PROCESAMIENTO AVANZADO DE CADENAS DE CARACTERES (Lautaro Zanino)
+def nombre_duplicado(nombres, nombre_nuevo):
+    # Normaliza el nombre nuevo sin espacios y en minúsculas y lo compara contra
+    # cada nombre existente en la lista, normalizado de la misma forma, de esta manera se detectan
+    # duplicados aunque difieran en mayúsculas/minúsculas o espacios
+    nuevo_nombre_normalizado = nombre_nuevo.strip().lower()
+
+    for i in range(len(nombres)):
+        if nombres[i].strip().lower() == nuevo_nombre_normalizado:
+            return True
+    return False
+
+# PROCESAMIENTO AVANZADO DE CADENAS DE CARACTERES (Lautaro Zanino)
+def buscar_por_palabras(nombres, texto_de_busqueda):
+    # Separa el texto de búsqueda en palabras sueltas, si el texto viene vacío,
+    # la lista queda vacía y como consecuencia ningún producto es descartado
+    texto_de_busqueda_normalizado = texto_de_busqueda.lower().split()
+
+    lista = []
+    for i in range(len(nombres)):
+        nombre = nombres[i].lower()
+        bandera = True
+        # Chequea que TODAS las palabras buscadas estén contenidas en el nombre
+        # sin importar el orden en que las haya escrito el usuario
+        for j in range(len(texto_de_busqueda_normalizado)):
+            if texto_de_busqueda_normalizado[j] not in nombre:
+                bandera = False
+        if bandera == True:
+            lista.append(nombres[i])
+
+    return lista
+
+def buscar_producto_por_palabras(nombres):
+    # Pide el texto de búsqueda, llama a buscar_por_palabras() para buscar coincidencias y muestra
+    # los resultados en pantalla si hubo alguna coincidencia o un mensaje si no se encontró nada
+    texto = pedir_texto("\nIngrese la palabra o palabras a buscar: ")
+    resultados = buscar_por_palabras(nombres, texto)
+
+    if len(resultados) == 0:
+        print("No se encontraron productos que coincidan con la búsqueda")
+    else:
+        print("\n--- RESULTADOS DE LA BÚSQUEDA ---")
+        for i in range(len(resultados)):
+            print("-", resultados[i])
+
+# PROCESAMIENTO AVANZADO DE CADENAS DE CARACTERES (Lautaro Zanino)
+def generar_etiqueta(nombre):
+    palabras_sueltas = nombre.split()
+
+    iniciales = ""
+    for i in range(len(palabras_sueltas)):
+        iniciales += palabras_sueltas[i][0].upper()
+
+    longitud = len(nombre)
+
+    codigo_final = iniciales + "-" + str(longitud)
+
+    return codigo_final
+
+def generar_etiquetas_productos(nombres):
+    lista_etiquetas = []
+    
+    for i in range(len(nombres)):
+        # Llama a la función generar_etiqueta() y guarda el resultado
+        etiqueta = generar_etiqueta(nombres[i])
+        # Junta el resultado en la lista nueva
+        lista_etiquetas.append(etiqueta)
+        
+    return lista_etiquetas
+
+def mostrar_etiquetas_productos(nombres):
+    # Muestra cada producto junto a su etiqueta generada. La encargada de hacer las
+    # etiquetas es generar_etiquetas_productos() que a su vez usa generar_etiqueta()
+    # para procesar cada nombre individualmente
+    if len(nombres) == 0:
+        print("No hay productos cargados.")
+        return
+
+    etiquetas = generar_etiquetas_productos(nombres)
+
+    print("\n--- ETIQUETAS DE PRODUCTOS ---")
+    for i in range(len(nombres)):
+        print(nombres[i], "->", etiquetas[i])
 # PROGRAMA PRINCIPAL (MENÚ)
 logged_in = iniciar_sesion()
 
@@ -525,9 +656,11 @@ if logged_in:
                 print("(4) Lista de productos")
                 print("(5) Buscar producto (Secuencial)")
                 print("(6) Buscar producto (Binaria)")
+                print("(7) Buscar productos por palabras clave")
+                print("(8) Etiquetas de productos")
                 print("(0) Volver atrás")
 
-                opcion_submenu_producto = solicitar_opcion_menu("\nIngrese una opción válida: ", 0, 6)
+                opcion_submenu_producto = solicitar_opcion_menu("\nIngrese una opción válida: ", 0, 9)
                 
                 if opcion_submenu_producto == 1:
                     alta_producto(prod_codigos, prod_nombres, prod_precios)
@@ -542,6 +675,10 @@ if logged_in:
                     buscar_producto_secuencial(prod_codigos, prod_nombres, prod_precios)
                 elif opcion_submenu_producto == 6:
                     buscar_producto_binaria(prod_codigos, prod_nombres, prod_precios)
+                elif opcion_submenu_producto == 7:
+                    buscar_producto_por_palabras(prod_nombres)
+                elif opcion_submenu_producto == 8:
+                    mostrar_etiquetas_productos(prod_nombres)
 
         elif opcion_menu == 2:
             opcion_submenu_categoria = -1
