@@ -4,9 +4,9 @@
 Sistema informático desarrollado en Python para centralizar la gestión operativa de un comercio. Permite el control preciso y automatizado de productos, categorías e inventario.
 
 ## Integrantes del Equipo
-- **Lautaro Zunino** - Procesamiento avanzado de cadenas de caracteres y reduce
-- **Felipe Larrañaga** - Validaciones con expresiones regulares y algoritmos de ordenamiento
-- **Felix Cabanchik** (Referente) - Configuración Git, control de ramas y módulo de login
+- **Lautaro Zanino** - Procesamiento avanzado de cadenas de caracteres y reduce
+- **Felipe Larrañaga** (Referente) - Validaciones con expresiones regulares y algoritmos de ordenamiento
+- **Felix Cabanchik**  - Configuración Git, control de ramas y módulo de login (Realizado. Aclaración: no continúa cursando la materia)
 - **Agustín Poggi** - Módulo de consultas estadísticas con funciones Lambda
 
 ## Funcionalidades Principales
@@ -21,7 +21,6 @@ Sistema informático desarrollado en Python para centralizar la gestión operati
 
 ## Branches del Proyecto
 - **main** - Rama principal (producción)
-- **lautaro-zunino** - Desarrollo de procesamiento de cadenas
+- **lautaro-zanino** - Desarrollo de procesamiento de cadenas
 - **felipe-larranaga** - Desarrollo de validaciones y ordenamiento
-- **felix-cabanchik** - Desarrollo de login y configuración
 - **agustin-poggi** - Desarrollo de reportes estadísticos
