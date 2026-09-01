@@ -302,7 +302,7 @@ def generar_reporte_productos(codigos, nombres, precios):
 
 # CATEGORÍAS
 def alta_categoria(codigos, nombres, recargos, estados):
-    codigo = pedir_entero("\nIngrese el código de la nueva categoría: ")
+    codigo = pedir_codigo("\nIngrese el código de la nueva categoría (formato CAT-00): ", "CAT", 2)
     if buscar_indice(codigos, codigo) != -1:
         print("Error: Ya existe una categoría con ese código.")
     else:
@@ -478,7 +478,7 @@ def consulta_productos_en_stock(columnas_prod, columnas_inv):
         print("Producto:", prod_nombres[p], "- Unidades en stock:", total)  # Mostramos el resultado de este producto
 
 def consulta_por_categoria(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    cat_buscada = pedir_entero("\nIngrese el código de categoría a consultar: ")  # Pedimos y validamos el código de categoría a buscar
+    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)  # Pedimos y validamos el código de categoría a buscar
     
     indices = list(filter(lambda i : inv_cats[i] == cat_buscada, range(len(inv_cods))))
     # ↑ FILTER con UNA sola condición: nos quedamos con los índices donde la categoría de esa fila coincide
@@ -508,7 +508,7 @@ def consulta_por_deposito(inv_cods, inv_deps, inv_prods, inv_cants):
             # el depósito ya lo eligió el usuario, y la categoría no fue criterio de búsqueda
 
 def consulta_unidades_categoria_deposito(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    cat_buscada = pedir_entero("\nIngrese el código de categoría a consultar: ")  # Pedimos y validamos el código de categoría
+    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)  # Pedimos y validamos el código de categoría
     dep_buscado = solicitar_opcion_menu("Ingrese el número de depósito a consultar (1 o 2): ", 1, 2)  # Pedimos y validamos el depósito (solo acepta 1 o 2)
     indices = list(filter(lambda i: inv_cats[i] == cat_buscada and inv_deps[i] == dep_buscado, range(len(inv_cods))))
     # ↑ FILTER con DOBLE condición: nos quedamos solo con los índices donde
@@ -735,4 +735,4 @@ if logged_in:
                 elif opcion_submenu_consultas == 4:
                     consulta_unidades_categoria_deposito(inv_codigos, inv_codigos_cat, inv_codigos_prod, inv_cantidades, inv_depositos)
     
-    print("\nSaliendo del sistema. ¡Gracias por usarlo!")		
+    print("\nSaliendo del sistema. ¡Gracias por usarlo!")
