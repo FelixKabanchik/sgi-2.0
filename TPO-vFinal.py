@@ -459,82 +459,72 @@ def generar_reporte_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_dep
     return "\n--- LISTA DE INVENTARIO ---\n" + reporte
 # CONSULTAS
 def consulta_productos_en_stock(columnas_prod, columnas_inv):
-    # Extraemos las columnas relevantes de la matriz de productos
-    prod_codigos = columnas_prod[0]   
-    prod_nombres = columnas_prod[1]   
-
-    # Extraemos las columnas relevantes de la matriz de inventario
-    inv_prods = columnas_inv[1]   
-    inv_cants = columnas_inv[3]   
-
-    print("\n--- PRODUCTOS EN STOCK ---")
-    # Recorremos cada producto
-    for p in range(len(prod_codigos)):
-        # Inicializamos el acumulador de unidades para este producto
-        total = 0
-        # Buscamos todas las apariciones de este producto en el inventario y sumamos sus cantidades
-        for i in range(len(inv_prods)):
-            if inv_prods[i] == prod_codigos[p]:
-                total += inv_cants[i]
-        # Mostramos el producto con su total de unidades en stock
-        print("Producto:", prod_nombres[p], "- Unidades en stock:", total)
+    prod_codigos = columnas_prod[0]  # Extraemos la columna 0 de la matriz de productos: los códigos
+    prod_nombres = columnas_prod[1]  # Extraemos la columna 1: los nombres de los productos
+    inv_prods = columnas_inv[1]      # De la matriz de inventario, columna 1: a qué producto pertenece cada fila
+    inv_cants = columnas_inv[3]      # De la matriz de inventario, columna 3: cantidad de unidades de cada fila
+    print("\n--- PRODUCTOS EN STOCK ---")  # Encabezado del reporte
+    for p in range(len(prod_codigos)):  # Recorremos cada producto uno por uno, usando su índice p
+        codigo_actual = prod_codigos[p]  # Guardamos el código del producto actual para no repetir el acceso
+        indices = list(filter(lambda i: inv_prods[i] == codigo_actual, range(len(inv_prods))))
+        # ↑ FILTER: recorremos todos los índices posibles del inventario y nos quedamos
+        # solo con los índices i donde el producto de esa fila coincide con codigo_actual
+        cantidades = list(map(lambda i: inv_cants[i], indices))
+        # ↑ MAP: transformamos la lista de índices filtrados en la lista de cantidades
+        # reales, yendo a buscar inv_cants[i] para cada índice que sobrevivió al filtro
+        total = reduce(lambda acumulado, actual: acumulado + actual, cantidades, 0)
+        # ↑ REDUCE: recorremos la lista de cantidades sumándolas de a una, empezando
+        # el acumulador en 0, hasta quedarnos con un único número final
+        print("Producto:", prod_nombres[p], "- Unidades en stock:", total)  # Mostramos el resultado de este producto
 
 def consulta_por_categoria(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    # Solicitamos el código de categoría a consultar (validado con regex, formato CAT-NN)
-    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)
-    # Flag para detectar si se encontraron registros
-    encontrado = False
-    print("\n--- STOCK DE LA CATEGORÍA", cat_buscada, "---")
-    # Recorremos todos los registros de inventario
-    for i in range(len(inv_cods)):
-        # Si la categoría coincide con la buscada, mostramos el registro
-        if inv_cats[i] == cat_buscada:
+    cat_buscada = pedir_entero("\nIngrese el código de categoría a consultar: ")  # Pedimos y validamos el código de categoría a buscar
+    
+    indices = list(filter(lambda i : inv_cats[i] == cat_buscada, range(len(inv_cods))))
+    # ↑ FILTER con UNA sola condición: nos quedamos con los índices donde la categoría de esa fila coincide
+                          
+    if not indices:  # Si no encontramos ninguna fila con esa categoría
+        print("No hay stock registrado para esta categoría.")  # Avisamos que no hay resultados
+    else :  # Si encontramos al menos una fila
+        print("\n--- STOCK DE LA CATEGORÍA", cat_buscada, "---")  # Encabezado con la categoría buscada
+        for i in indices:  # Recorremos los índices filtrados
             print("Cód Inv:", inv_cods[i], "| Producto:", inv_prods[i], "| Cantidad:", inv_cants[i], "| Depósito:", inv_deps[i])
-            encontrado = True
-    # Si no se encontraron registros, mostramos un mensaje informativo
-    if not encontrado:
-        print("No hay stock registrado para esta categoría.")
+            # ↑ Mostramos también el depósito, porque no filtramos por depósito
+            # y el usuario necesita saber en cuál está cada unidad
 
 def consulta_por_deposito(inv_cods, inv_deps, inv_prods, inv_cants):
-    # Solicitamos el número de depósito a consultar (validado entre 1 y 2)
-    dep_buscado = solicitar_opcion_menu("\nIngrese el número de depósito a consultar (1 o 2): ", 1, 2)
-    # Flag para detectar si se encontraron registros
-    encontrado = False
-    print("\n--- STOCK DEL DEPÓSITO", dep_buscado, "---")
-    # Recorremos todos los registros de inventario
-    for i in range(len(inv_cods)):
-        # Si el depósito coincide con el buscado, mostramos el registro
-        if inv_deps[i] == dep_buscado:
+    dep_buscado = solicitar_opcion_menu("\nIngrese el número de depósito a consultar (1 o 2): ", 1, 2)  # Pedimos y validamos el depósito (1 o 2)
+    
+    indices = list(filter(lambda i: inv_deps[i] == dep_buscado, range(len(inv_cods))))
+    # ↑ FILTER con UNA sola condición: nos quedamos con los índices donde el depósito de esa fila coincide
+    
+    if not indices:  # Si no encontramos ninguna fila en ese depósito
+        print("No hay stock registrado en este depósito.")  # Avisamos que no hay resultados
+    else:  # Si encontramos al menos una fila
+        print("\n--- STOCK DEL DEPÓSITO", dep_buscado, "---")  # Encabezado con el depósito buscado
+        for i in indices:  # Recorremos los índices filtrados
             print("Cód Inv:", inv_cods[i], "| Producto:", inv_prods[i], "| Cantidad:", inv_cants[i])
-            encontrado = True
-    # Si no se encontraron registros, mostramos un mensaje informativo
-    if not encontrado:
-        print("No hay stock registrado en este depósito.")
+            # ↑ No mostramos categoría ni depósito porque no aportan info nueva:
+            # el depósito ya lo eligió el usuario, y la categoría no fue criterio de búsqueda
 
 def consulta_unidades_categoria_deposito(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    # Solicitamos el código de categoría a consultar (validado con regex, formato CAT-NN)
-    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)
-    # Solicitamos el número de depósito a consultar (validado entre 1 y 2)
-    dep_buscado = solicitar_opcion_menu("Ingrese el número de depósito a consultar (1 o 2): ", 1, 2)
-    # Acumulador para sumar todas las unidades encontradas
-    total = 0
-    # Bandera para detectar si se encontraron registros
-    encontrado = False
-    print("\n--- UNIDADES DE LA CATEGORÍA", cat_buscada, "EN EL DEPÓSITO", dep_buscado, "---")
-    # Recorremos todos los registros de inventario
-    for i in range(len(inv_cods)):
-        # Si coinciden tanto la categoría como el depósito, mostramos el registro y sumamos las unidades
-        if inv_cats[i] == cat_buscada and inv_deps[i] == dep_buscado:
-            print("Cód Inv:", inv_cods[i], "| Producto:", inv_prods[i], "| Cantidad:", inv_cants[i])
-            total += inv_cants[i]
-            encontrado = True
-    # Si se encontraron registros, mostramos el total de unidades acumuladas
-    if encontrado:
-        print("Cantidad total de unidades:", total)
-    # Si no se encontraron registros, mostramos un mensaje informativo
-    else:
-        print("No hay stock registrado para esta categoría en ese depósito.")
-
+    cat_buscada = pedir_entero("\nIngrese el código de categoría a consultar: ")  # Pedimos y validamos el código de categoría
+    dep_buscado = solicitar_opcion_menu("Ingrese el número de depósito a consultar (1 o 2): ", 1, 2)  # Pedimos y validamos el depósito (solo acepta 1 o 2)
+    indices = list(filter(lambda i: inv_cats[i] == cat_buscada and inv_deps[i] == dep_buscado, range(len(inv_cods))))
+    # ↑ FILTER con DOBLE condición: nos quedamos solo con los índices donde
+    # la categoría Y el depósito de esa fila coinciden con lo buscado (deben cumplirse las dos)
+    if not indices:  # Si la lista de índices quedó vacía (ninguna fila cumplió ambas condiciones)
+        print("No hay stock registrado para esta categoría en ese depósito.")  # Avisamos que no hay resultados
+    else:  # Si encontramos al menos un índice que cumple
+        print("\n--- UNIDADES DE LA CATEGORÍA", cat_buscada, "EN EL DEPÓSITO", dep_buscado, "---")  # Encabezado con los datos buscados
+        for i in indices:  # Recorremos únicamente los índices que pasaron el filtro
+            print("Cód Inv:", inv_cods[i], "| Producto:", inv_prods[i], "| Cantidad:", inv_cants[i])  # Imprimimos el detalle de cada fila encontrada
+        cantidades = list(map(lambda i: inv_cants[i], indices))
+        # ↑ MAP: convertimos los índices filtrados en la lista real de cantidades
+        total = reduce(lambda acumulado, actual: acumulado + actual, cantidades, 0)
+        # ↑ REDUCE: sumamos todas las cantidades para obtener el total acumulado, arrancando en 0
+        print("Cantidad total de unidades:", total)  # Mostramos el total calculado
+        
 # PROCESAMIENTO AVANZADO DE CADENAS DE CARACTERES (Lautaro Zanino)
 def nombre_duplicado(nombres, nombre_nuevo):
     # Normaliza el nombre nuevo sin espacios y en minúsculas y lo compara contra
