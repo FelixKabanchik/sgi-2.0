@@ -392,7 +392,7 @@ def alta_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, prod_cod
             print("Error: La categoría no existe en el sistema. Alta cancelada.")
             return
         cantidad = pedir_entero("Ingrese la cantidad de unidades: ")
-        deposito = solicitar_opcion_menu("Ingrese el número de depósito (1 o 2): ", 1, 2)
+        deposito = solicitar_opcion_menu("Ingrese el número de depósito (1, 2 o 3): ", 1, 3)
         
         inv_cods.append(codigo)
         inv_prods.append(cod_prod)
@@ -430,7 +430,7 @@ def modificar_inventario(inv_cods, inv_prods, inv_cats, inv_cants, inv_deps, pro
             print("Error: La categoría no existe. Modificación cancelada.")
             return
         nueva_cant = pedir_entero("Ingrese la nueva cantidad: ")
-        nuevo_dep = solicitar_opcion_menu("Ingrese el nuevo depósito (1 o 2): ", 1, 2)
+        nuevo_dep = solicitar_opcion_menu("Ingrese el nuevo depósito (1, 2 o 3): ", 1, 3)
         
         inv_prods[indice] = nuevo_cod_prod
         inv_cats[indice] = nuevo_cod_cat
@@ -493,7 +493,7 @@ def consulta_por_categoria(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
             # y el usuario necesita saber en cuál está cada unidad
 
 def consulta_por_deposito(inv_cods, inv_deps, inv_prods, inv_cants):
-    dep_buscado = solicitar_opcion_menu("\nIngrese el número de depósito a consultar (1 o 2): ", 1, 2)  # Pedimos y validamos el depósito (1 o 2)
+    dep_buscado = solicitar_opcion_menu("\nIngrese el número de depósito a consultar (1, 2 o 3): ", 1, 3)  # Pedimos y validamos el depósito (1, 2 o 3)
     
     indices = list(filter(lambda i: inv_deps[i] == dep_buscado, range(len(inv_cods))))
     # ↑ FILTER con UNA sola condición: nos quedamos con los índices donde el depósito de esa fila coincide
@@ -509,7 +509,7 @@ def consulta_por_deposito(inv_cods, inv_deps, inv_prods, inv_cants):
 
 def consulta_unidades_categoria_deposito(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
     cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)  # Pedimos y validamos el código de categoría
-    dep_buscado = solicitar_opcion_menu("Ingrese el número de depósito a consultar (1 o 2): ", 1, 2)  # Pedimos y validamos el depósito (solo acepta 1 o 2)
+    dep_buscado = solicitar_opcion_menu("Ingrese el número de depósito a consultar (1, 2 o 3): ", 1, 3)  # Pedimos y validamos el depósito (solo acepta 1, 2 o 3)
     indices = list(filter(lambda i: inv_cats[i] == cat_buscada and inv_deps[i] == dep_buscado, range(len(inv_cods))))
     # ↑ FILTER con DOBLE condición: nos quedamos solo con los índices donde
     # la categoría Y el depósito de esa fila coinciden con lo buscado (deben cumplirse las dos)
