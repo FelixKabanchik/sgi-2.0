@@ -650,7 +650,7 @@ if logged_in:
                 print("(8) Etiquetas de productos")
                 print("(0) Volver atrás")
 
-                opcion_submenu_producto = solicitar_opcion_menu("\nIngrese una opción válida: ", 0, 9)
+                opcion_submenu_producto = solicitar_opcion_menu("\nIngrese una opción válida: ", 0, 8)
                 
                 if opcion_submenu_producto == 1:
                     alta_producto(prod_codigos, prod_nombres, prod_precios)
