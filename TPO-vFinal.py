@@ -477,20 +477,32 @@ def consulta_productos_en_stock(columnas_prod, columnas_inv):
         # el acumulador en 0, hasta quedarnos con un único número final
         print("Producto:", prod_nombres[p], "- Unidades en stock:", total)  # Mostramos el resultado de este producto
 
-def consulta_por_categoria(inv_cods, inv_cats, inv_prods, inv_cants, inv_deps):
-    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)  # Pedimos y validamos el código de categoría a buscar
-    
-    indices = list(filter(lambda i : inv_cats[i] == cat_buscada, range(len(inv_cods))))
+def consulta_por_categoria(columnas_cat, columnas_inv):
+    cat_codigos = columnas_cat[0]   # Extraemos la columna 0 de la matriz de categorías: los códigos
+    cat_nombres = columnas_cat[1]   # Extraemos la columna 1: los nombres de categoría
+    inv_cods = columnas_inv[0]      # De la matriz de inventario, columna 0: los códigos de cada registro
+    inv_prods = columnas_inv[1]     # Columna 1: a qué producto pertenece cada fila
+    inv_cats = columnas_inv[2]      # Columna 2: a qué categoría pertenece cada fila
+    inv_cants = columnas_inv[3]     # Columna 3: cantidad de unidades de cada fila
+    inv_deps = columnas_inv[4]      # Columna 4: en qué depósito está cada fila
+
+    cat_buscada = pedir_codigo("\nIngrese el código de categoría a consultar (formato CAT-00): ", "CAT", 2)  # Pedimos y validamos el formato del código
+
+    indice_cat = buscar_indice(cat_codigos, cat_buscada)  # Buscamos si la categoría existe realmente en el sistema
+    if indice_cat == -1:  # Si no la encontramos entre las categorías cargadas
+        print("Error: la categoría no existe.")  # Avisamos que el código no corresponde a ninguna categoría real
+        return  # Cortamos la función acá, no tiene sentido seguir buscando stock de algo que no existe
+    nombre_cat = cat_nombres[indice_cat]  # Guardamos el nombre de la categoría para mostrarlo en los mensajes
+
+    indices = list(filter(lambda i: inv_cats[i] == cat_buscada, range(len(inv_cods))))
     # ↑ FILTER con UNA sola condición: nos quedamos con los índices donde la categoría de esa fila coincide
-                          
-    if not indices:  # Si no encontramos ninguna fila con esa categoría
-        print("No hay stock registrado para esta categoría.")  # Avisamos que no hay resultados
-    else :  # Si encontramos al menos una fila
-        print("\n--- STOCK DE LA CATEGORÍA", cat_buscada, "---")  # Encabezado con la categoría buscada
+
+    if not indices:  # Si la categoría existe, pero no tiene ningún registro de stock asociado
+        print(f"No hay stock registrado para la categoría {cat_buscada} ({nombre_cat}).")  # Avisamos, ahora aclarando el nombre
+    else:  # Si encontramos al menos una fila con esa categoría
+        print(f"\n--- STOCK DE LA CATEGORÍA {cat_buscada} - {nombre_cat} ---")  # Encabezado con código Y nombre de la categoría
         for i in indices:  # Recorremos los índices filtrados
             print("Cód Inv:", inv_cods[i], "| Producto:", inv_prods[i], "| Cantidad:", inv_cants[i], "| Depósito:", inv_deps[i])
-            # ↑ Mostramos también el depósito, porque no filtramos por depósito
-            # y el usuario necesita saber en cuál está cada unidad
 
 def consulta_por_deposito(inv_cods, inv_deps, inv_prods, inv_cants):
     dep_buscado = solicitar_opcion_menu("\nIngrese el número de depósito a consultar (1, 2 o 3): ", 1, 3)  # Pedimos y validamos el depósito (1, 2 o 3)
@@ -729,7 +741,7 @@ if logged_in:
                 if opcion_submenu_consultas == 1:
                     consulta_productos_en_stock(columnas_prod, columnas_inv)
                 elif opcion_submenu_consultas == 2:
-                    consulta_por_categoria(inv_codigos, inv_codigos_cat, inv_codigos_prod, inv_cantidades, inv_depositos)
+                    consulta_por_categoria(columnas_cat, columnas_inv)
                 elif opcion_submenu_consultas == 3:
                      consulta_por_deposito(inv_codigos, inv_depositos, inv_codigos_prod, inv_cantidades)
                 elif opcion_submenu_consultas == 4:
