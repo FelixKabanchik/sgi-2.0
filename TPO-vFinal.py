@@ -641,12 +641,10 @@ if logged_in:
 
         if opcion_menu == 0:
             print("Quiere salir de la app?")
-            salir = int(input("1 para salir 2 para quedarse"))
+            salir = int(input("1 para salir 2 para quedarse: "))
             if salir == 1:
                 opcion_menu = 999
-            else:
-                opcion_menu = solicitar_opcion_menu("\nIngrese una opción válida: ", 0, 4)
-            
+            # si elige quedarse (2), el while vuelve a imprimir el menú principal completo desde el inicio     
         
         if opcion_menu == 1:
             opcion_submenu_producto = -1 
